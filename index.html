@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cross Clues Lite</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+  }
+
+  h1 {
+    margin-bottom: 10px;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 12px;
+    text-align: center;
+  }
+
+  th {
+    background: #f4f4f4;
+  }
+
+  td.cell {
+    cursor: pointer;
+    user-select: none;
+    min-width: 90px;
+    height: 60px;
+  }
+
+  td.cell:hover {
+    background: #f7f7f7;
+  }
+
+  td.revealed {
+    background: #d7ffd7;
+    font-weight: bold;
+  }
+
+  textarea {
+    width: 100%;
+    height: 120px;
+  }
+
+  input[type=text] {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+
+  button {
+    padding: 10px 16px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .history {
+    margin-top: 16px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .history-item {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .coordinate {
+    font-weight: bold;
+  }
+
+  @media (max-width: 900px) {
+    .container {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>Cross Clues Lite</h1>
+
+<p>
+Edit the row and column words below. Each cell represents the
+combination of a row word and a column word.
+</p>
+
+<div class="container">
+
+  <div>
+    <h3>Game Board</h3>
+    <div id="board"></div>
+  </div>
+
+  <div>
+    <h3>Words</h3>
+
+    <label>Rows (one per line)</label>
+    <textarea id="rowsInput">Man
+Woman
+Rock
+Boat</textarea>
+
+    <label>Columns (one per line)</label>
+    <textarea id="colsInput">Crown
+Spider
+Red
+Water</textarea>
+
+    <button onclick="generateBoard()">Generate Board</button>
+
+    <hr>
+
+    <h3>Add Clue</h3>
+
+    <input
+      id="clueInput"
+      type="text"
+      placeholder="Example: Peter Parker"
+    >
+
+    <input
+      id="coordInput"
+      type="text"
+      placeholder="Coordinate (e.g. A2)"
+    >
+
+    <button onclick="addClue()">Add Clue</button>
+
+    <div class="history" id="history"></div>
+  </div>
+
+</div>
+
+<script>
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+let rows = [];
+let cols = [];
+
+function generateBoard() {
+  rows = document
+    .getElementById("rowsInput")
+    .value
+    .split("\n")
+    .map(v => v.trim())
+    .filter(Boolean);
+
+  cols = document
+    .getElementById("colsInput")
+    .value
+    .split("\n")
+    .map(v => v.trim())
+    .filter(Boolean);
+
+  let html = "<table>";
+
+  html += "<tr><th></th>";
+
+  cols.forEach((col, index) => {
+    html += `<th>${index + 1}<br>${col}</th>`;
+  });
+
+  html += "</tr>";
+
+  rows.forEach((row, rowIndex) => {
+    html += `<tr>`;
+    html += `<th>${letters[rowIndex]}<br>${row}</th>`;
+
+    cols.forEach((_, colIndex) => {
+      const coord = `${letters[rowIndex]}${colIndex + 1}`;
+
+      html += `
+        <td
+          class="cell"
+          data-coord="${coord}"
+          onclick="toggleCell(this)"
+        >
+          ?
+        </td>
+      `;
+    });
+
+    html += "</tr>";
+  });
+
+  html += "</table>";
+
+  document.getElementById("board").innerHTML = html;
+}
+
+function toggleCell(cell) {
+  const coord = cell.dataset.coord;
+
+  if (cell.classList.contains("revealed")) {
+    cell.classList.remove("revealed");
+    cell.textContent = "?";
+  } else {
+    cell.classList.add("revealed");
+    cell.textContent = coord;
+  }
+}
+
+function addClue() {
+  const clue = document.getElementById("clueInput").value.trim();
+  const coord = document.getElementById("coordInput").value.trim().toUpperCase();
+
+  if (!clue || !coord) {
+    alert("Enter both clue and coordinate.");
+    return;
+  }
+
+  const history = document.getElementById("history");
+
+  const div = document.createElement("div");
+  div.className = "history-item";
+
+  div.innerHTML = `
+    <div><strong>Clue:</strong> ${escapeHtml(clue)}</div>
+    <div><span class="coordinate">${coord}</span></div>
+  `;
+
+  history.prepend(div);
+
+  document.getElementById("clueInput").value = "";
+  document.getElementById("coordInput").value = "";
+}
+
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+generateBoard();
+</script>
+
+</body>
+</html>
