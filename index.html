@@ -66,8 +66,8 @@
         user-select: none;
     }
 
-    td.cell:hover {
-        background: #f5fdff;
+    td.cell:hover:not(.revealed) {
+        background: #64ddf1;
     }
 
     td.revealed {
@@ -75,7 +75,6 @@
         color: white;
         font-weight: bold;
         border-color: #14602a;
-        transform: scale(1.02);
     }
 
     textarea,
