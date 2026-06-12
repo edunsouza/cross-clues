@@ -1,255 +1,463 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cross Clues Lite</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross Clues Lite</title>
 
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-  }
-
-  h1 {
-    margin-bottom: 10px;
-  }
-
-  .container {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 24px;
-  }
-
-  table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-
-  th, td {
-    border: 1px solid #ccc;
-    padding: 12px;
-    text-align: center;
-  }
-
-  th {
-    background: #f4f4f4;
-  }
-
-  td.cell {
-    cursor: pointer;
-    user-select: none;
-    min-width: 90px;
-    height: 60px;
-  }
-
-  td.cell:hover {
-    background: #f7f7f7;
-  }
-
-  td.revealed {
-    background: #d7ffd7;
-    font-weight: bold;
-  }
-
-  textarea {
-    width: 100%;
-    height: 120px;
-  }
-
-  input[type=text] {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
-  }
-
-  button {
-    padding: 10px 16px;
-    cursor: pointer;
-    margin-top: 8px;
-  }
-
-  .history {
-    margin-top: 16px;
-    border: 1px solid #ddd;
-    padding: 10px;
-    max-height: 400px;
-    overflow-y: auto;
-  }
-
-  .history-item {
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-  }
-
-  .coordinate {
-    font-weight: bold;
-  }
-
-  @media (max-width: 900px) {
-    .container {
-      grid-template-columns: 1fr;
+  <style>
+    :root {
+      --pink: #e87084;
+      --blue: #64ddf1;
+      --cream: #fffaf2;
+      --dark: #333;
+      --border: #444;
     }
-  }
-</style>
+
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        background: var(--cream);
+        color: var(--dark);
+    }
+
+    h1 {
+        text-align: center;
+        color: var(--pink);
+        margin-bottom: 30px;
+    }
+
+    .container {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 24px;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+        border: 3px solid var(--border);
+        box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    }
+
+    th,
+    td {
+        border: 2px solid var(--border);
+        padding: 12px;
+        text-align: center;
+    }
+
+    th {
+        background: var(--blue);
+        color: var(--dark);
+        font-weight: bold;
+    }
+
+    td.cell {
+        cursor: pointer;
+        min-width: 80px;
+        height: 60px;
+        background: white;
+        transition: .15s;
+        user-select: none;
+    }
+
+    td.cell:hover {
+        background: #f5fdff;
+    }
+
+    td.revealed {
+        background: var(--pink);
+        color: white;
+        font-weight: bold;
+    }
+
+    textarea,
+    input {
+        width: 100%;
+        box-sizing: border-box;
+        border: 2px solid var(--blue);
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    textarea {
+        height: 120px;
+        margin-bottom: 10px;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: none;
+        border-radius: 8px;
+        background: var(--pink);
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+        transition: .15s;
+    }
+
+    button:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    hr {
+        border: none;
+        border-top: 2px dashed var(--blue);
+        margin: 20px 0;
+    }
+
+    #handDisplay {
+        border: 3px solid var(--blue);
+        border-radius: 12px;
+        background: white;
+        padding: 16px;
+        min-height: 120px;
+    }
+
+    .card-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .card {
+        background: var(--blue);
+        color: var(--dark);
+        font-weight: bold;
+        border-radius: 999px;
+        padding: 10px 14px;
+        border: 2px solid var(--border);
+    }
+
+    .status {
+        margin-top: 12px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    h2 {
+        color: var(--pink);
+        margin-top: 0;
+    }
+
+    .column-header {
+      background: var(--blue);
+    }
+
+    .row-header {
+      background: var(--pink);
+      color: white;
+    }
+  </style>
 </head>
 <body>
 
 <h1>Cross Clues Lite</h1>
 
-<p>
-Edit the row and column words below. Each cell represents the
-combination of a row word and a column word.
-</p>
-
 <div class="container">
 
-  <div>
-    <h3>Game Board</h3>
-    <div id="board"></div>
-  </div>
+    <div>
+        <h2>Board</h2>
+        <div id="board"></div>
+    </div>
 
-  <div>
-    <h3>Words</h3>
+    <div>
 
-    <label>Rows (one per line)</label>
-    <textarea id="rowsInput">Man
+        <h3>Rows</h3>
+        <textarea id="rowsInput">Man
 Woman
-Rock
-Boat</textarea>
+House
+Store
+Country</textarea>
 
-    <label>Columns (one per line)</label>
-    <textarea id="colsInput">Crown
+        <h3>Columns</h3>
+        <textarea id="colsInput">Crown
 Spider
-Red
-Water</textarea>
+Guitar
+Fast
+Bat</textarea>
 
-    <button onclick="generateBoard()">Generate Board</button>
+        <button onclick="generateBoard()">
+            Generate Board
+        </button>
 
-    <hr>
+        <hr>
 
-    <h3>Add Clue</h3>
+        <h3>Players</h3>
 
-    <input
-      id="clueInput"
-      type="text"
-      placeholder="Example: Peter Parker"
-    >
+        <input
+            id="playersInput"
+            type="number"
+            min="1"
+            value="4"
+        >
 
-    <input
-      id="coordInput"
-      type="text"
-      placeholder="Coordinate (e.g. A2)"
-    >
+        <button onclick="prepareHands()">
+            Prepare Hands
+        </button>
 
-    <button onclick="addClue()">Add Clue</button>
+        <button onclick="giveCards()">
+            Give Cards
+        </button>
 
-    <div class="history" id="history"></div>
-  </div>
+        <div id="handDisplay">
+            Generate a board first.
+        </div>
+
+    </div>
 
 </div>
 
 <script>
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-let rows = [];
-let cols = [];
+const game = {
+    rows: [],
+    cols: [],
+    deck: [],
+    hands: [],
+    players: 0,
+    nextHand: 0
+};
 
-function generateBoard() {
-  rows = document
-    .getElementById("rowsInput")
-    .value
-    .split("\n")
-    .map(v => v.trim())
-    .filter(Boolean);
+function shuffle(array) {
+  const arr = [...array];
 
-  cols = document
-    .getElementById("colsInput")
-    .value
-    .split("\n")
-    .map(v => v.trim())
-    .filter(Boolean);
+  for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(
+          Math.random() * (i + 1)
+      );
 
-  let html = "<table>";
+      [arr[i], arr[j]] =
+      [arr[j], arr[i]];
+  }
 
-  html += "<tr><th></th>";
+  return arr;
+}
 
-  cols.forEach((col, index) => {
-    html += `<th>${index + 1}<br>${col}</th>`;
-  });
+function generateCoordinates(rows, cols) {
+  const coords = [];
 
-  html += "</tr>";
+  for (let r = 0; r < rows.length; r++) {
+      for (let c = 0; c < cols.length; c++) {
+          coords.push(
+              `${letters[r]}${c + 1}`
+          );
+      }
+  }
 
-  rows.forEach((row, rowIndex) => {
-    html += `<tr>`;
-    html += `<th>${letters[rowIndex]}<br>${row}</th>`;
-
-    cols.forEach((_, colIndex) => {
-      const coord = `${letters[rowIndex]}${colIndex + 1}`;
-
-      html += `
-        <td
-          class="cell"
-          data-coord="${coord}"
-          onclick="toggleCell(this)"
-        >
-          ?
-        </td>
-      `;
-    });
-
-    html += "</tr>";
-  });
-
-  html += "</table>";
-
-  document.getElementById("board").innerHTML = html;
+  return coords;
 }
 
 function toggleCell(cell) {
   const coord = cell.dataset.coord;
 
   if (cell.classList.contains("revealed")) {
-    cell.classList.remove("revealed");
-    cell.textContent = "?";
+      cell.classList.remove("revealed");
+      cell.textContent = "?";
   } else {
-    cell.classList.add("revealed");
-    cell.textContent = coord;
+      cell.classList.add("revealed");
+      cell.textContent = coord;
   }
 }
 
-function addClue() {
-  const clue = document.getElementById("clueInput").value.trim();
-  const coord = document.getElementById("coordInput").value.trim().toUpperCase();
+function generateBoard() {
+  game.rows = document
+      .getElementById("rowsInput")
+      .value
+      .split("\n")
+      .map(v => v.trim())
+      .filter(Boolean);
 
-  if (!clue || !coord) {
-    alert("Enter both clue and coordinate.");
-    return;
+  game.cols = document
+      .getElementById("colsInput")
+      .value
+      .split("\n")
+      .map(v => v.trim())
+      .filter(Boolean);
+
+  let html = "<table>";
+
+  html += "<tr><th></th>";
+
+  game.cols.forEach((col, i) => {
+      html += `
+        <th class="column-header">
+            ${i + 1}<br>
+            ${col}
+        </th>
+      `;
+  });
+
+  html += "</tr>";
+
+  game.rows.forEach((row, r) => {
+
+      html += "<tr>";
+
+      html += `
+          <th class="row-header">
+              ${letters[r]}<br>
+              ${row}
+          </th>
+      `;
+
+      game.cols.forEach((_, c) => {
+
+          const coord =
+              `${letters[r]}${c + 1}`;
+
+          html += `
+              <td
+                  class="cell"
+                  data-coord="${coord}"
+                  onclick="toggleCell(this)"
+              >
+                  ?
+              </td>
+          `;
+      });
+
+      html += "</tr>";
+  });
+
+  html += "</table>";
+
+  document.getElementById("board").innerHTML =
+      html;
+
+  game.deck = shuffle(
+      generateCoordinates(
+          game.rows,
+          game.cols
+      )
+  );
+
+  game.hands = [];
+  game.players = 0;
+  game.nextHand = 0;
+
+  document.getElementById("handDisplay")
+      .innerHTML = `
+      Board generated.<br>
+      ${game.deck.length} coordinates shuffled.
+  `;
+}
+
+function prepareHands() {
+  if (game.deck.length === 0) {
+      alert("Generate the board first.");
+      return;
   }
 
-  const history = document.getElementById("history");
+  const players = Number(
+      document.getElementById("playersInput").value
+  );
 
-  const div = document.createElement("div");
-  div.className = "history-item";
+  if (!players || players < 1) {
+      alert("Invalid number of players.");
+      return;
+  }
 
-  div.innerHTML = `
-    <div><strong>Clue:</strong> ${escapeHtml(clue)}</div>
-    <div><span class="coordinate">${coord}</span></div>
+  game.players = players;
+  game.hands = [];
+
+  const baseSize =
+      Math.floor(
+          game.deck.length / players
+      );
+
+  const remainder =
+      game.deck.length % players;
+
+  let start = 0;
+
+  for (let i = 0; i < players; i++) {
+
+      const size =
+          baseSize +
+          (i < remainder ? 1 : 0);
+
+      const hand =
+          game.deck.slice(
+              start,
+              start + size
+          );
+
+      game.hands.push(hand);
+
+      start += size;
+  }
+
+  game.nextHand = 0;
+
+  document.getElementById("handDisplay")
+      .innerHTML = `
+      Hands prepared.<br>
+      ${players} players.<br>
+      Click "Give Cards".
+  `;
+}
+
+function giveCards() {
+  if (game.hands.length === 0) {
+      alert("Prepare hands first.");
+      return;
+  }
+
+  if (
+      game.nextHand >= game.hands.length
+  ) {
+      document.getElementById("handDisplay")
+          .innerHTML = `
+          <h2>NO MORE CARDS</h2>
+      `;
+      return;
+  }
+
+  const player =
+      game.nextHand + 1;
+
+  const hand =
+      game.hands[game.nextHand];
+
+  const remaining =
+      game.hands.length -
+      game.nextHand - 1;
+
+  document.getElementById("handDisplay")
+      .innerHTML = `
+      <h2>Player ${player}</h2>
+
+      <div class="card-list">
+          ${hand
+              .map(card =>
+                  `<div class="card">${card}</div>`
+              )
+              .join("")}
+      </div>
+
+      <br>
+
+      <div class="status">
+          Remaining hands: ${remaining}
+      </div>
   `;
 
-  history.prepend(div);
-
-  document.getElementById("clueInput").value = "";
-  document.getElementById("coordInput").value = "";
-}
-
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
+  game.nextHand++;
 }
 
 generateBoard();
